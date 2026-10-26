@@ -1,0 +1,47 @@
+/* SERTRACEN Panamá: original supplied logo, displayed without its outer whitespace.
+   The image itself is preserved; the viewport only frames the existing artwork. */
+:root{--navy:#003558;--blue:#003558;--brand-yellow:#ffc400;--brand-ink:#003558;--line:#dfe6eb;color:var(--brand-ink);background:#f5f7f9}
+.topbar{height:110px;border-top:5px solid var(--brand-yellow);border-bottom-color:#e4e9ed}
+.brand{display:block;flex-shrink:0}
+.brand-logo{display:block;position:relative;overflow:hidden;width:310px;aspect-ratio:780/180;background:#fff}
+.brand-logo img{display:block;position:absolute;width:115.384615%;height:auto;max-width:none;left:-7.692307%;top:-200%}
+.demo-tag{color:#416078;border-color:#d8e1e8;background:#f8fafb}
+.text-button{color:var(--brand-ink);font-weight:600}
+.steps .active{color:var(--brand-ink)}
+.steps .active b{background:var(--brand-yellow);border-color:var(--brand-yellow);color:var(--brand-ink);font-weight:800}
+.eyebrow{color:var(--brand-ink)}
+h1,h2{color:var(--brand-ink)}
+.heading .eyebrow::before,.login-intro>.eyebrow::before{content:'';display:inline-block;vertical-align:middle;width:23px;height:3px;background:var(--brand-yellow);margin-right:10px}
+.primary{background:var(--brand-yellow);color:var(--brand-ink);border-color:var(--brand-yellow);box-shadow:0 4px 10px #d9a70014;font-weight:700}
+.primary:hover{background:#efb800;border-color:#efb800}
+.secondary{color:var(--brand-ink)}
+.secondary:hover{background:#f3f6f8}
+button:focus-visible,a:focus-visible,input:focus-visible{outline-color:#dca900}
+.option-card{border-color:#dbe3e9}
+.option-card:hover{border-color:#003558;box-shadow:0 10px 25px #0035580d}
+.mobile-card{border-top-color:var(--brand-yellow)}
+.option-number em{color:var(--brand-ink);background:#fff5cf}
+.option-icon{background:#edf3f7;color:var(--brand-ink)}
+.mobile-card .option-icon{background:#fff6d9}
+.option-link{color:var(--brand-ink)}
+.option-link b{background:#fff4cb;border-radius:50%;width:27px;height:27px;display:grid;place-items:center;font-size:17px;margin-top:-3px}
+.help-strip{background:#edf2f5}
+.help-icon{color:var(--brand-ink);border-color:#8195a5}
+.login-card{border-top:4px solid var(--brand-yellow)}
+.login-intro h1{color:var(--brand-ink)}
+.intro-art{background:#fff1be}
+.intro-art>svg{color:var(--brand-ink)}
+.art-phone{background:var(--brand-ink)}
+.demo-info{background:#fff8e2;color:#6f7c89}
+.demo-info b,.demo-info strong{color:var(--brand-ink)}
+.dropzone{background:#f8fafb;border-color:#b0c3cf;color:var(--brand-ink)}
+.dropzone:hover{background:#fff9e9;border-color:#cba52b}
+.file-icon{background:#edf3f7;color:var(--brand-ink)}
+.list-title b{background:#fff2c2;color:var(--brand-ink)}
+.timer{color:var(--brand-ink);background:#fff5d2;border-color:#f2dda0}
+.notice{background:var(--brand-ink);border-left:4px solid var(--brand-yellow)}
+footer{border-top:1px solid #dfe6eb}
+footer strong{font-weight:650;color:#526c80;font-size:9px;letter-spacing:.7px}
+@media(max-width:850px){.topbar{height:95px}.brand-logo{width:260px}.header-right{gap:18px}}
+@media(max-width:600px){.topbar{height:89px;padding:0 5%;gap:12px}.brand-logo{width:205px}.header-right{gap:9px}.demo-tag{font-size:7px;padding:5px}.text-button{font-size:10px}.header-right:has(#logout:not(.hidden)) .demo-tag{display:none}footer>span:first-child{max-width:62%;line-height:1.8}footer strong{display:block;font-size:8px}}
+@media(max-width:360px){.brand-logo{width:175px}}
