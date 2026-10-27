@@ -2,25 +2,25 @@
 
 ## Preparar la demostración
 
+Se mantienen las direcciones actuales: `/` para el acceso/control del kiosco y `/mobile/:token` para el portal móvil. La separación del kiosco a otra URL queda pendiente para una etapa posterior.
+
 1. Instalar las dependencias y arrancar siguiendo el [README](../README.md).
 2. Abrir la dirección del servidor e iniciar sesión con `admin` / `admin`.
 3. Usar archivos ficticios. En `test/fixtures/documento-demo.pdf` hay un PDF de muestra sin datos personales.
 
-## Desde el ordenador
+## Desde el kiosco
 
-1. Elegir **Cargar desde el ordenador**. Se abre el selector nativo.
-2. Seleccionar uno o varios archivos. Se envían al servidor y aparecen en la lista.
-3. Abrir **Ver documento** para revisar la imagen o el PDF. En los PDF puede cambiar de página.
-4. Confirmar **Se ve bien, confirmar** si el archivo corresponde al trámite, está completo y resulta legible.
-5. Para corregir un archivo, pulsar **Eliminar** y seleccionar el reemplazo. El reemplazo requiere una nueva revisión.
-6. Cuando todos estén revisados, pulsar **Continuar** para mostrar **Carga Exitosa**.
+1. Iniciar sesión y pulsar **Generar código QR** en la tarjeta **Conecta tu teléfono**.
+2. Mantener abierta la pantalla de espera mientras se cargan y revisan los documentos desde el móvil.
+3. Consultar los archivos recibidos con **Ver documento**; el kiosco también permite revisar y eliminar archivos del intento activo.
+4. La finalización se realiza con **Continuar** en el teléfono. El kiosco muestra **Carga Exitosa** automáticamente.
 
-**Cancelar** descarta el intento y regresa al panel con la sesión abierta. **Iniciar nuevo trámite** borra el resumen anterior y prepara otro trámite.
+El kiosco no tiene selector de archivos ni opción de carga desde el ordenador. **Cancelar carga** descarta el intento y regresa al panel con la sesión abierta. **Iniciar nuevo trámite** borra el resumen anterior y prepara otro trámite.
 
 ## Desde el móvil
 
 1. Conectar ordenador y teléfono a la misma red que permita comunicación entre dispositivos.
-2. En el kiosco, elegir **Cargar desde el móvil**.
+2. En el kiosco, pulsar **Generar código QR**.
 3. Escanear el QR: el teléfono abre un portal asociado al trámite, sin pedir la contraseña administrativa.
 4. Usar **Desde cámara** o **Cargar documentos**. La captura nativa puede ofrecer cámara o galería según el navegador.
 5. Tras una foto, aceptar para enviarla o cancelar para repetirla.

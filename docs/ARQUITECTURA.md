@@ -20,20 +20,21 @@ No hay paso de compilación del frontend, base de datos ni servicio externo de Q
 
 El kiosco usa una cookie `stc.sid` gestionada por express-session. Al autenticar se regenera el identificador para separar la nueva sesión de la anterior. El almacenamiento administrativo es MemoryStore.
 
-El trámite tiene un UUID visible abreviado en pantalla. Su propietario interno es el identificador de sesión del kiosco. Los archivos locales y los recibidos mediante el token móvil se guardan en ese mismo objeto. Cambiar el origen inicia un intento nuevo y descarta el intento anterior; no acumula documentos de diferentes intentos.
+El trámite tiene un UUID visible abreviado en pantalla. Su propietario interno es el identificador de sesión del kiosco. Los documentos recibidos mediante el token móvil se guardan en ese mismo objeto. Generar otro QR inicia un intento nuevo y descarta el anterior. La subida directa desde el ordenador está retirada.
 
 El teléfono recibe un token aleatorio de 32 bytes en la URL. Funciona como credencial temporal del trámite y no concede acceso al resto de sesiones. No debe compartirse ni persistirse. Las rutas de contenido también exigen la cookie propietaria o un token vigente.
+
+## Direcciones y alcance de esta versión
+
+Se conservan las rutas actuales del portal (`/` y `/mobile/:token`) y su despliegue existente. La separación del kiosco a otra URL no se implementa en este cambio. El teléfono mantiene cámara, selector de documentos, vista previa, revisión, eliminación y finalización. El kiosco genera el QR y sigue el estado.
 
 ## Estados
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle: login
-    idle --> uploading: carga local
     idle --> waiting: generar QR
-    uploading --> complete: archivos revisados y continuar
     waiting --> complete: continuar desde móvil con archivos revisados
-    uploading --> idle: cancelar
     waiting --> idle: cancelar o vencer 120 s
     complete --> idle: nuevo trámite
 ```
@@ -48,7 +49,7 @@ El servidor calcula `expiresAt`. El navegador utiliza `serverTime` para compensa
 
 ## Archivos y validación
 
-Los binarios se reciben y conservan en RAM con Multer. Una segunda verificación después de recibir el multipart evita aceptar cargas de intentos locales cancelados o reemplazados, enlaces vencidos y sesiones destruidas.
+Los binarios se reciben y conservan en RAM con Multer. Una segunda verificación del token después de recibir el multipart evita aceptar cargas de intentos cancelados, enlaces reemplazados o vencidos y sesiones destruidas.
 
 Se comprueban límites de tamaño/cantidad, firmas y estructura mínima de los contenedores admitidos. El tipo devuelto se obtiene del contenido y no del MIME declarado o la extensión. SHA-256 permite rechazar duplicados dentro del trámite y del lote. La incorporación del lote es atómica: no se guardan sus archivos si uno falla.
 

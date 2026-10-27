@@ -22,15 +22,12 @@ Las rutas usan el mismo origen que el frontend. Salvo el contenido binario de do
 | POST | `/api/login` | Autentica y crea el trámite |
 | POST | `/api/logout` | Destruye sesión, documentos y token |
 | GET | `/api/session` | Metadatos y estado actual |
-| POST | `/api/start/local` | Inicia un intento de carga local |
 | POST | `/api/start/mobile` | Inicia 120 segundos y devuelve además `url` y `qr` como PNG data URL |
 | GET | `/api/qr` | Recupera `url` y `qr` activos, sin renovar el plazo |
-| POST | `/api/files` | Recibe archivos locales en campos multipart `files` |
 | GET | `/api/files/:fileId/content` | Devuelve los bytes con el tipo detectado y disposición inline |
 | POST | `/api/files/:fileId/review` | Marca como revisado un archivo del intento activo |
 | DELETE | `/api/files/:fileId` | Elimina un archivo del intento activo |
 | POST | `/api/cancel` | Descarta intento y devuelve estado idle |
-| POST | `/api/complete` | Finaliza un intento local con todos los documentos revisados |
 | POST | `/api/new` | Crea otro trámite dentro de la sesión administrativa |
 
 ## Rutas móviles
@@ -45,17 +42,17 @@ Las rutas usan el mismo origen que el frontend. Salvo el contenido binario de do
 | POST | `/api/mobile/:token/cancel` | Revoca token y descarta el intento |
 | POST | `/api/mobile/:token/complete` | Finaliza y revoca token |
 
-El kiosco puede ver y revisar los archivos del móvil con su cookie. La finalización móvil se envía desde el portal móvil; el kiosco no usa `/api/complete` para finalizar ese origen.
+El kiosco puede ver y revisar los archivos del móvil con su cookie. La subida y finalización se envían únicamente desde el portal móvil. Las rutas antiguas `POST /api/files` y `POST /api/complete` ya no existen (404); `POST /api/start/local` se rechaza (400). Las rutas administrativas de vista previa, revisión y eliminación se mantienen para los documentos recibidos.
 
 ## Ejemplo de estado
 
 ```json
 {
   "id": "uuid-del-tramite",
-  "status": "uploading",
-  "source": "local",
+  "status": "waiting",
+  "source": "mobile",
   "reason": null,
-  "expiresAt": null,
+  "expiresAt": 1790000120000,
   "serverTime": 1790000000000,
   "files": [{
     "id": "uuid-del-archivo",
