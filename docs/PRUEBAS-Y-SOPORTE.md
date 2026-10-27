@@ -6,24 +6,25 @@ Después de instalar dependencias, ejecutar `npm test` desde la raíz. Node ejec
 
 | Archivo | Cobertura |
 | --- | --- |
-| `test/api.test.js` | Login, cookie, carga local/móvil compartida, límite exacto de 5 MiB, revisión, cancelación, caducidad, cierre de sesión y rechazo de otro origen |
+| `test/api.test.js` | Login, cookie, carga móvil compartida con kiosco, rechazo de las rutas locales retiradas, límite exacto de 5 MiB, revisión, cancelación, caducidad, cierre de sesión y rechazo de otro origen |
 | `test/store.test.js` | Vencimiento a 120 segundos, aislamiento, revocación, finalización y limpieza |
 | `test/documents.test.js` | Reconocimiento de PNG/PDF, contenedores incompletos y huellas de contenido |
 | `test/review.test.js` | Acceso al contenido, permisos entre usuarios, revisión, eliminación, reemplazo, duplicados y rechazo atómico de lotes |
 
-La suite contiene ocho pruebas. El reconocimiento binario probado es básico; no es un escáner antivirus ni una prueba exhaustiva de cada formato y navegador.
+La suite contiene ocho pruebas. Incluye la regresión que impide iniciar o enviar cargas locales por API. El reconocimiento binario probado es básico; no es un escáner antivirus ni una prueba exhaustiva de cada formato y navegador.
 
 ## Guion de aceptación manual
 
 | Escenario | Resultado esperado |
 | --- | --- |
 | Contraseña errónea | Mensaje de error; sin sesión administrativa |
-| Cargar una imagen y un PDF ficticios | Miniatura/visor, nombre y tamaño visibles |
+| Cargar desde el móvil una imagen y un PDF ficticios | Miniatura/visor, nombre y tamaño visibles |
 | Abrir y confirmar solo un archivo | Continuar sigue deshabilitado mientras falte otro |
 | Revisar todos | Continuar queda habilitado y finaliza correctamente |
 | Eliminar un documento | Desaparece también en el otro dispositivo al actualizarse el estado |
 | Repetir contenido con otro nombre | Rechazo como duplicado |
 | Cargar un lote con un archivo inválido | No se agrega ninguno de ese lote |
+| Panel del kiosco | Solo ofrece Generar código QR, sin carga desde el ordenador |
 | Escanear QR en otro teléfono | Acceso al mismo número de trámite sin contraseña administrativa |
 | Cancelar desde el móvil | Kiosco vuelve al panel y el enlace deja de funcionar |
 | Dejar vencer 120 segundos | Mismo resultado que cancelar, con aviso de vencimiento |
@@ -54,6 +55,8 @@ La cámara nativa, HEIC/HEIF y conectividad entre un teléfono físico y la Wi-F
 **El servidor dice que el archivo es inválido:** renombrar la extensión no convierte su contenido. Volver a exportarlo desde la aplicación de origen y comprobar que no esté vacío ni truncado.
 
 ## Mejoras propuestas, todavía no implementadas
+
+La separación del acceso del kiosco a una URL distinta se deja para una fase posterior. El portal actual y su URL móvil se conservan en esta entrega.
 
 1. Requisitos configurables por trámite: cédula frente/reverso, certificado de sangre y otros.
 2. Ayudas de encuadre, orientación, recorte y control de legibilidad de fotos.

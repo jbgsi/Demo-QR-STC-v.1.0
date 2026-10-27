@@ -10,7 +10,6 @@ const mobileToken = location.pathname.match(/^\/mobile\/([a-f0-9]{64})$/)?.[1];
 let state = null, qr = null, busy = false, ended = false, pendingPhoto = null, previewUrl = null, offset = 0;
 const mobileBase = `/api/mobile/${mobileToken}`;
 const icons = {
-  computer: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="8" width="36" height="25" rx="3"/><path d="M17 41h14M24 33v8M18 22l6-6 6 6M24 16v12"/></svg>',
   mobile: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="13" y="4" width="23" height="40" rx="4"/><path d="M21 9h7M22 38h5M4 20h17m-6-6 6 6-6 6"/></svg>',
   file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v6h5M8 13h8M8 17h6"/></svg>'
 };
@@ -22,7 +21,7 @@ async function api(url, body, method = body === undefined ? 'GET' : 'POST') {
   return data;
 }
 function notice(message) { const element = document.querySelector('#notice'); element.textContent = message; element.classList.remove('hidden'); clearTimeout(notice.timer); notice.timer = setTimeout(() => element.classList.add('hidden'), 7000); }
-function steps(active = 1) { return `<nav class="steps" aria-label="Progreso"><span class="${active === 1 ? 'active' : 'done'}"><b>01</b> Selecciona el origen</span><i></i><span class="${active === 2 ? 'active' : active > 2 ? 'done' : ''}"><b>02</b> Carga tus documentos</span><i></i><span class="${active === 3 ? 'active' : ''}"><b>03</b> ¡Todo listo!</span></nav>`; }
+function steps(active = 1) { return `<nav class="steps" aria-label="Progreso"><span class="${active === 1 ? 'active' : 'done'}"><b>01</b> Conecta tu móvil</span><i></i><span class="${active === 2 ? 'active' : active > 2 ? 'done' : ''}"><b>02</b> Carga y revisa</span><i></i><span class="${active === 3 ? 'active' : ''}"><b>03</b> ¡Todo listo!</span></nav>`; }
 function heading(eyebrow, title, subtitle) { return `<div class="heading"><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${subtitle}</p></div>`; }
 function sessionBar() { return `<div class="session-bar"><span><i class="status-dot"></i> Sesión activa <b>·</b> Administrador</span><span>Trámite <strong>#${state.id.slice(0, 8).toUpperCase()}</strong></span></div>`; }
 function fileUrl(file) { return `${mobileToken ? mobileBase : '/api'}/files/${file.id}/content`; }
@@ -119,7 +118,7 @@ document.querySelector('#review-document').onclick = () => action(async () => {
 function renderLogin() {
   if (documentDialog.open) closeDocument();
   logout.classList.add('hidden');
-  app.innerHTML = `<div class="login-layout"><section class="login-intro"><span class="eyebrow">AUTOGESTIÓN DE DOCUMENTOS</span><h1>Un paso más cerca<br>de tu licencia.</h1><p>Carga los documentos de tu trámite de forma sencilla, desde este equipo o desde tu teléfono.</p><div class="intro-art">${icons.file}<span class="art-check">✓</span><div class="art-phone">${icons.mobile}</div></div><span class="intro-bottom">01 / UN TRÁMITE SIN COMPLICACIONES</span></section><section class="login-card"><span class="eyebrow">BIENVENIDO A SERTRACEN</span><h2>Inicia tu sesión</h2><p>Ingresa tus credenciales para comenzar.</p><form id="login-form"><label for="username">Usuario</label><input id="username" name="username" autocomplete="username" placeholder="Ingresa tu usuario" required><label for="password">Contraseña</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required><p id="login-error" class="error" role="alert"></p><button class="button primary full">Iniciar sesión <span>→</span></button></form><div class="demo-info"><b>Acceso de demostración</b><span>Usuario: <strong>admin</strong> &nbsp; Contraseña: <strong>admin</strong></span></div></section></div>`;
+  app.innerHTML = `<div class="login-layout"><section class="login-intro"><span class="eyebrow">AUTOGESTIÓN DE DOCUMENTOS</span><h1>Un paso más cerca<br>de tu licencia.</h1><p>Carga los documentos de tu trámite desde tu teléfono y envíalos al kiosco con un código QR.</p><div class="intro-art">${icons.file}<span class="art-check">✓</span><div class="art-phone">${icons.mobile}</div></div><span class="intro-bottom">01 / UN TRÁMITE SIN COMPLICACIONES</span></section><section class="login-card"><span class="eyebrow">BIENVENIDO A SERTRACEN</span><h2>Inicia tu sesión</h2><p>Ingresa tus credenciales para comenzar.</p><form id="login-form"><label for="username">Usuario</label><input id="username" name="username" autocomplete="username" placeholder="Ingresa tu usuario" required><label for="password">Contraseña</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required><p id="login-error" class="error" role="alert"></p><button class="button primary full">Iniciar sesión <span>→</span></button></form><div class="demo-info"><b>Acceso de demostración</b><span>Usuario: <strong>admin</strong> &nbsp; Contraseña: <strong>admin</strong></span></div></section></div>`;
   document.querySelector('#login-form').onsubmit = event => {
     event.preventDefault();
     action(async () => {
@@ -134,14 +133,8 @@ function render() {
   if (mobileToken) return renderMobile();
   if (state.status === 'complete') return renderSuccess();
   if (state.status === 'waiting') return renderWaiting();
-  if (state.status === 'uploading') return renderLocal();
-  app.innerHTML = `${sessionBar()}${steps()}${heading('DOCUMENTOS PARA TU LICENCIA', '¿Cómo deseas cargar tus documentos?', 'Elige la opción que prefieras para agregar los requisitos de tu trámite.')}<div class="option-grid"><button class="option-card" id="local"><span class="option-number">OPCIÓN 01</span><span class="option-icon">${icons.computer}</span><h2>Cargar desde el ordenador</h2><p>Selecciona los documentos que tienes<br>guardados en este equipo.</p><span class="option-link">Seleccionar archivos <b>→</b></span></button><button class="option-card mobile-card" id="mobile"><span class="option-number">OPCIÓN 02 <em>CON TU TELÉFONO</em></span><span class="option-icon">${icons.mobile}</span><h2>Cargar desde el móvil</h2><p>Escanea un código QR y toma fotos<br>o carga archivos desde tu teléfono.</p><span class="option-link">Generar código QR <b>→</b></span></button></div><div class="help-strip"><span class="help-icon">i</span><div><strong>Ten tus documentos a mano</strong><p>Cédula, certificado de tipo de sangre y demás requisitos de tu trámite.</p></div><span class="format-badge">PDF o imágenes · Máx. 5 MB por archivo</span></div>`;
-  document.querySelector('#local').onclick = () => action(async () => { syncState(await api('/api/start/local', {})); render(); picker.click(); });
+  app.innerHTML = `${sessionBar()}${steps()}${heading('DOCUMENTOS PARA TU LICENCIA', 'Carga tus documentos desde el móvil', 'Conecta tu teléfono con un código QR para agregar los requisitos de tu trámite.')}<div class="mobile-start"><button class="option-card mobile-card" id="mobile"><span class="option-number">CARGA DE DOCUMENTOS <em>CON TU TELÉFONO</em></span><span class="option-icon">${icons.mobile}</span><h2>Conecta tu teléfono</h2><p>Escanea el código QR y toma fotos o selecciona los documentos que tienes en tu móvil.</p><span class="option-link">Generar código QR <b>→</b></span></button></div><div class="help-strip"><span class="help-icon">i</span><div><strong>Ten tus documentos a mano</strong><p>Cédula, certificado de tipo de sangre y demás requisitos de tu trámite.</p></div><span class="format-badge">PDF o imágenes · Máx. 5 MB por archivo</span></div>`;
   document.querySelector('#mobile').onclick = () => action(async () => { const data = await api('/api/start/mobile', {}); qr = data; syncState(data); render(); });
-}
-function renderLocal() {
-  app.innerHTML = `${sessionBar()}${steps(2)}${heading('CARGA DESDE EL ORDENADOR', 'Agrega tus documentos', 'Revisa los archivos seleccionados antes de continuar.')}<section class="panel"><button id="add-files" class="dropzone">${icons.computer}<strong>Seleccionar documentos</strong><span>PDF o imágenes · Máximo 5 MB por archivo · Hasta 20 archivos</span></button><div class="list-title">Documentos cargados <b>${state.files.length}</b></div>${fileList()}${!state.files.length ? '<p class="empty">Aún no has agregado documentos.</p>' : ''}<div class="actions"><button id="cancel" class="button secondary">Cancelar</button><button id="continue" class="button primary" ${!canContinue() ? 'disabled' : ''}>Continuar →</button></div></section>`;
-  document.querySelector('#add-files').onclick = () => picker.click(); bindActions();
 }
 function renderWaiting() {
   app.innerHTML = `${sessionBar()}${steps(2)}${heading('CARGA DESDE EL MÓVIL', 'En espera de sus Documentos', 'Escanea el código QR con la cámara de tu teléfono para comenzar.')}<section class="panel qr-layout"><div class="qr-box">${qr ? `<img src="${qr.qr}" alt="QR para abrir el portal móvil de carga" width="250" height="250">` : '<p>Preparando QR…</p>'}<span class="qr-label">ESCANEA PARA CONECTARTE</span></div><div class="qr-instructions"><span class="timer" id="timer" role="timer">02:00</span><h2>Tu teléfono, tu escáner.</h2><ol><li>Abre la cámara y apunta al código QR.</li><li>Fotografía o selecciona tus documentos.</li><li>Pulsa <strong>Continuar</strong> en tu móvil.</li></ol><p class="muted">Ambos dispositivos deben tener acceso a esta dirección. El enlace vence en 2 minutos.</p><button id="cancel" class="button secondary">Cancelar carga</button></div><div class="qr-file-list"><div class="list-title">Documentos recibidos <b>${state.files.length}</b></div>${fileList()}</div></section>`;
@@ -157,9 +150,8 @@ function renderSuccess() {
 }
 function mobileEnded(message) { ended = true; cleanupPhoto(); if (documentDialog.open) closeDocument(); app.innerHTML = `<section class="success"><span class="success-check neutral">i</span><h1>Enlace finalizado</h1><p>${escapeHTML(message)}</p><p class="muted">Regresa al kiosco para iniciar otra carga.</p></section>`; }
 function bindActions() {
-  const prefix = mobileToken ? mobileBase : '/api';
-  document.querySelector('#cancel').onclick = () => action(async () => { const data = await api(`${prefix}/cancel`, {}); if (mobileToken) mobileEnded('Has cancelado la carga.'); else { syncState(data); render(); } });
-  document.querySelector('#continue').onclick = () => action(async () => { const data = await api(`${prefix}/complete`, {}); if (mobileToken) { ended = true; cleanupPhoto(); renderSuccess(); } else { syncState(data); render(); } });
+  document.querySelector('#cancel').onclick = () => action(async () => { await api(`${mobileBase}/cancel`, {}); mobileEnded('Has cancelado la carga.'); });
+  document.querySelector('#continue').onclick = () => action(async () => { await api(`${mobileBase}/complete`, {}); ended = true; cleanupPhoto(); renderSuccess(); });
 }
 async function action(task) {
   if (busy || ended) return;
@@ -169,11 +161,12 @@ async function action(task) {
 }
 async function uploadFiles(files) {
   if (!files.length) return;
+  if (!mobileToken) throw new Error('Abre el enlace QR en tu teléfono para cargar documentos.');
   if (files.some(file => file.size > 5 * 1024 * 1024 || file.size === 0)) throw new Error('Cada archivo debe contener datos y pesar como máximo 5 MB.');
   if (files.length + state.files.length > 20) throw new Error('Puede agregar hasta 20 documentos.');
   notice('Validando y cargando documentos…');
   const body = new FormData(); files.forEach(file => body.append('files', file));
-  syncState(await api(mobileToken ? `${mobileBase}/files` : '/api/files', body)); render(); notice('Carga recibida. Abre los documentos para revisarlos.');
+  syncState(await api(`${mobileBase}/files`, body)); render(); notice('Carga recibida. Abre los documentos para revisarlos.');
 }
 picker.onchange = () => { const files = [...picker.files]; picker.value = ''; action(() => uploadFiles(files)); };
 camera.onchange = () => {

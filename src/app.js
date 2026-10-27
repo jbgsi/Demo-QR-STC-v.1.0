@@ -32,7 +32,6 @@ export function createApp({ store = new Store(), secret = process.env.SESSION_SE
     const job = store.get(req.sessionID);
     if (!job) return res.status(401).json({ error: 'La sesión ha vencido.' });
     req.job = job;
-    req.attempt = job.attempt;
     next();
   };
   const mobile = (req, res, next) => {
@@ -61,7 +60,7 @@ export function createApp({ store = new Store(), secret = process.env.SESSION_SE
   });
   app.get('/api/session', authenticate, (req, res) => res.json(store.snapshot(req.job)));
   app.post('/api/start/:source', authenticate, async (req, res) => {
-    if (!['local', 'mobile'].includes(req.params.source)) return res.status(400).json({ error: 'Origen inválido.' });
+    if (req.params.source !== 'mobile') return res.status(400).json({ error: 'La carga se realiza únicamente desde el móvil.' });
     if (req.job.status === 'complete') return res.status(409).json({ error: 'El proceso ya finalizó.' });
     let base;
     if (req.params.source === 'mobile') {
@@ -71,7 +70,7 @@ export function createApp({ store = new Store(), secret = process.env.SESSION_SE
       if (!['http:', 'https:'].includes(url.protocol)) return res.status(400).json({ error: 'PUBLIC_BASE_URL debe usar HTTP o HTTPS.' });
       if (['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) return res.status(400).json({ error: 'Abra el kiosco con la IP de red del ordenador o configure PUBLIC_BASE_URL para que el móvil pueda conectarse.' });
     }
-    store.begin(req.job, req.params.source);
+    store.begin(req.job);
     if (base) {
       const url = `${base.replace(/\/$/, '')}/mobile/${req.job.token}`;
       const qr = await QRCode.toDataURL(url, { width: 300, margin: 2, errorCorrectionLevel: 'M' });
@@ -87,9 +86,9 @@ export function createApp({ store = new Store(), secret = process.env.SESSION_SE
     res.json({ url, qr: await QRCode.toDataURL(url, { width: 300, margin: 2 }) });
   });
   const addFiles = (req, res) => {
-    // Re-check after multipart parsing: a deadline/logout/cancel can occur during upload.
-    const job = req.params.token ? store.resolve(req.params.token) : store.get(req.sessionID);
-    if (!job || job !== req.job || (!req.params.token && req.attempt !== job.attempt) || !['waiting', 'uploading'].includes(job.status) || (req.params.token ? job.source !== 'mobile' : job.source !== 'local')) {
+    // Re-check the QR after parsing: expiration, logout or cancellation can occur during upload.
+    const job = store.resolve(req.params.token);
+    if (!job || job !== req.job) {
       return res.status(409).json({ error: 'Esta carga ya no está activa.' });
     }
     if (!req.files?.length) return res.status(400).json({ error: 'Seleccione al menos un archivo.' });
@@ -115,22 +114,17 @@ export function createApp({ store = new Store(), secret = process.env.SESSION_SE
     res.send(file.buffer);
   };
   const modifyFile = (req, res) => {
-    if (!['uploading', 'waiting'].includes(req.job.status)) return res.status(409).json({ error: 'La carga ya finalizó.' });
+    if (req.job.status !== 'waiting') return res.status(409).json({ error: 'La carga ya finalizó.' });
     const index = req.job.files.findIndex(file => file.id === req.params.fileId);
     if (index < 0) return res.status(404).json({ error: 'El documento ya no está disponible.' });
     if (req.method === 'DELETE') req.job.files.splice(index, 1);
     else req.job.files[index].reviewed = true;
     res.json(store.snapshot(req.job));
   };
-  app.post('/api/files', authenticate, upload, addFiles);
   app.get('/api/files/:fileId/content', authenticate, content);
   app.delete('/api/files/:fileId', authenticate, modifyFile);
   app.post('/api/files/:fileId/review', authenticate, modifyFile);
   app.post('/api/cancel', authenticate, (req, res) => { store.cancel(req.job, 'cancelled'); res.json(store.snapshot(req.job)); });
-  app.post('/api/complete', authenticate, (req, res) => {
-    if (req.job.source !== 'local') return res.status(409).json({ error: 'Finalice desde el móvil.' });
-    store.finish(req.job); res.json(store.snapshot(req.job));
-  });
   app.post('/api/new', authenticate, (req, res) => { store.destroy(req.sessionID); res.json(store.snapshot(store.create(req.sessionID))); });
   app.get('/api/mobile/:token', mobile, (req, res) => res.json(store.snapshot(req.job)));
   app.post('/api/mobile/:token/files', mobile, upload, addFiles);

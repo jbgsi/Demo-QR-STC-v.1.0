@@ -1,12 +1,12 @@
 # Demo QR STC v1.0
 
-Prototipo funcional para cargar requisitos de una licencia desde un kiosco o un teléfono conectado por QR. Interfaz en español, adaptable a escritorio y móvil, sin servicios externos para generar el QR.
+Prototipo funcional para cargar requisitos de una licencia desde un teléfono vinculado al kiosco mediante un código QR. Interfaz en español, adaptable a escritorio y móvil, sin servicios externos para generar el QR.
 
 ## Documentación
 
 | Guía | Contenido |
 | --- | --- |
-| [Uso paso a paso](docs/GUIA-DE-USO.md) | Ordenador, móvil, cámara, revisión y cancelación |
+| [Uso paso a paso](docs/GUIA-DE-USO.md) | Kiosco, móvil, cámara, revisión y cancelación |
 | [Arquitectura](docs/ARQUITECTURA.md) | Componentes, estados, sesión compartida y límites |
 | [API y configuración](docs/API.md) | Variables de entorno, todas las rutas y errores |
 | [Pruebas y soporte](docs/PRUEBAS-Y-SOPORTE.md) | Suite automatizada, aceptación manual, incidencias y mejoras pendientes |
@@ -33,7 +33,7 @@ El repositorio incluye `pnpm-lock.yaml`: si usa pnpm, puede instalar con `pnpm i
 1. Conecte ordenador y teléfono a la misma red Wi-Fi.
 2. Consulte la IP local del ordenador con `ipconfig` (ejemplo: `192.168.1.50`).
 3. Abra el kiosco en `http://192.168.1.50:3000` en lugar de localhost. Permita el puerto 3000 en el firewall de la red privada si fuera necesario.
-4. Inicie sesión, elija **Cargar desde el móvil** y escanee el QR. No necesita iniciar sesión en el teléfono.
+4. Inicie sesión, pulse **Generar código QR** y escanee el QR. No necesita iniciar sesión en el teléfono.
 5. Agregue fotos o documentos, abra cada uno y confirme que se ve bien. Luego pulse **Continuar**. El kiosco mostrará **Carga Exitosa** en aproximadamente un segundo.
 
 El QR no puede apuntar a `localhost`, porque en el teléfono sería el propio teléfono. Si el kiosco se abre en localhost, configure una URL accesible para el móvil:
@@ -47,13 +47,14 @@ Puede copiar `.env.example` a `.env` y cargarla con `node --env-file=.env src/se
 
 ## Flujos
 
-- **Ordenador:** abre el selector nativo, sube archivos al servidor y muestra la lista. Cancelar borra la carga y vuelve al panel; Continuar finaliza el trámite.
+El kiosco ofrece únicamente la carga por QR. El portal actual conserva sus direcciones (`/` y `/mobile/:token`); la URL separada para el kiosco se abordará en una fase posterior.
+
 - **Móvil:** token aleatorio de 256 bits, QR único, plazo fijo de 120 segundos controlado por el servidor. El portal permite cámara nativa, vista previa para aceptar/repetir y selección de archivos. Los estados y documentos se consultan cada 800 ms sin peticiones superpuestas.
 - **Cancelación o vencimiento:** invalida el token, descarta los documentos de ese intento y devuelve el kiosco al panel. Recargar no reinicia el plazo.
 - **Cerrar sesión:** destruye la sesión del kiosco, los documentos y el acceso del móvil. El botón aparece en todas las vistas autenticadas del kiosco. El portal móvil usa el token y ofrece Cancelar; no expone la sesión administrativa.
 - **Carga Exitosa:** conserva el resumen hasta cerrar sesión o iniciar un nuevo trámite.
 
-La cámara usa un selector `capture="environment"`, compatible con navegadores móviles que ofrecen captura nativa; algunos navegadores permiten elegir cámara o galería. No requiere `getUserMedia`. En escritorio se abre un selector de imágenes. La previsualización de HEIC/HEIF depende del navegador; PDF, JPG, PNG y WebP son las opciones más interoperables.
+La cámara usa un selector `capture="environment"`, compatible con navegadores móviles que ofrecen captura nativa; algunos navegadores permiten elegir cámara o galería. No requiere `getUserMedia`. La cámara y el selector de archivos se ofrecen en el portal móvil; el kiosco solo genera el enlace y muestra el estado. La previsualización de HEIC/HEIF depende del navegador; PDF, JPG, PNG y WebP son las opciones más interoperables.
 
 ## Estructura
 
@@ -87,19 +88,16 @@ package.json
 | `POST /api/login` | JSON `{ "username": "admin", "password": "admin" }` |
 | `POST /api/logout` | Destruye sesión y documentos |
 | `GET /api/session` | Estado del trámite autenticado |
-| `POST /api/start/local` | Inicia carga local |
 | `POST /api/start/mobile` | Inicia plazo y devuelve QR/URL |
 | `GET /api/qr` | Recupera el QR vigente sin renovar plazo |
-| `POST /api/files` | Multipart con campo `files` |
 | `POST /api/cancel` | Cancela y vuelve al panel |
-| `POST /api/complete` | Finaliza la carga local |
 | `POST /api/new` | Nuevo trámite en la misma sesión administrativa |
 | `GET /api/mobile/:token` | Estado del trámite desde el móvil |
 | `POST /api/mobile/:token/files` | Multipart desde el teléfono |
 | `POST /api/mobile/:token/cancel` | Cancela desde el teléfono |
 | `POST /api/mobile/:token/complete` | Finaliza desde el teléfono |
 
-Todos los documentos de ambos orígenes pertenecen al trámite de la sesión autenticada. Los binarios permanecen exclusivamente en memoria; la API devuelve solo metadatos. Se validan archivos no vacíos y un máximo de **5 MiB (5 × 1024 × 1024 bytes) por archivo**, en cliente y servidor. Se admiten PDF e imágenes JPEG, PNG, WebP, HEIC y HEIF; hasta 20 documentos por trámite (100 MiB máximo). Un lote inválido se rechaza completo.
+Todos los documentos recibidos desde el móvil pertenecen al trámite de la sesión del kiosco. Los binarios permanecen exclusivamente en memoria; la API devuelve solo metadatos. Se validan archivos no vacíos y un máximo de **5 MiB (5 × 1024 × 1024 bytes) por archivo**, en cliente y servidor. Se admiten PDF e imágenes JPEG, PNG, WebP, HEIC y HEIF; hasta 20 documentos por trámite (100 MiB máximo). Un lote inválido se rechaza completo.
 
 ## Alcance del demo y QA
 
