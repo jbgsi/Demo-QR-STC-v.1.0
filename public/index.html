@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#003558">
+  <title>SERTRACEN Panamá · Demo QR STC v1.0</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/brand.css">
+  <link rel="stylesheet" href="/documents.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Inicio SERTRACEN Panamá"><span class="brand-logo"><img src="/assets/sertracen-panama.png" alt="SERTRACEN Panamá" width="900" height="900"></span></a><div class="header-right"><span class="demo-tag">DEMO v1.0</span><button id="logout" class="text-button hidden">Cerrar sesión <span aria-hidden="true">↗</span></button></div></header>
+  <main id="app" tabindex="-1"></main>
+  <div id="notice" class="notice hidden" role="alert"></div>
+  <footer><span><strong>SERTRACEN PANAMÁ</strong> · Demo QR STC v1.0</span><span>Tu trámite, más simple.</span><span>Entorno de demostración</span></footer>
+  <input id="picker" type="file" accept="application/pdf,image/*" multiple hidden>
+  <input id="camera" type="file" accept="image/*" capture="environment" hidden>
+  <dialog id="document-dialog" class="document-dialog" aria-labelledby="document-title">
+    <div class="preview-heading"><div><span class="eyebrow">REVISA TU DOCUMENTO</span><h2 id="document-title"></h2></div><button id="close-document" class="preview-close" aria-label="Cerrar vista previa">×</button></div>
+    <div id="document-content" class="document-content"></div>
+    <div class="review-guidance"><strong>¿Es el documento correcto?</strong><p>Comprueba que esté completo, enfocado y que los datos se puedan leer.</p><span>✓ Tamaño permitido &nbsp; ✓ Formato reconocido</span></div>
+    <div class="actions"><button id="remove-document" class="button secondary">Eliminar archivo</button><button id="review-document" class="button primary">Se ve bien, confirmar ✓</button></div>
+  </dialog>
+  <dialog id="photo-dialog"><h2>Revisa tu fotografía</h2><img id="photo-preview" alt="Fotografía del documento"><p id="photo-name"></p><div class="actions"><button id="reject-photo" class="button secondary">Cancelar</button><button id="accept-photo" class="button primary">Aceptar fotografía</button></div></dialog>
+</body>
+</html>

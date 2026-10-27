@@ -1,0 +1,22 @@
+{
+  "name": "demo-qr-stc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo de carga de documentos desde kiosco y móvil con QR",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.2",
+    "pdfjs-dist": "^6.4.299",
+    "qrcode": "^1.5.4"
+  }
+}
