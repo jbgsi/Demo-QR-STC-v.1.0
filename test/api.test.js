@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createApp } from '../src/app.js';
 import { Store, TTL } from '../src/store.js';
 
-test('HTTP: authentication, local upload, QR handoff, cancellation, limits, expiration and logout', async t => {
+test('HTTP: mobile-only upload, kiosk synchronization, cancellation, limits, expiration and logout', async t => {
   let time = Date.now();
   const store = new Store(() => time);
   const app = createApp({ store, publicBaseUrl: 'http://192.168.1.50:3000' });
@@ -25,22 +25,28 @@ test('HTTP: authentication, local upload, QR handoff, cancellation, limits, expi
   assert.equal((await request('/api/login', { username: 'admin', password: 'wrong' })).status, 401);
   assert.equal((await request('/api/login', { username: 'admin', password: 'admin' })).status, 200);
   const initial = (await request('/api/session')).data;
-  await request('/api/start/local', {});
-  assert.equal((await request('/api/complete', {})).status, 409);
-  assert.equal((await request('/api/files', files(5 * 1024 * 1024))).status, 200);
-  assert.equal((await request('/api/files', files(5 * 1024 * 1024 + 1))).status, 400);
+  assert.equal((await request('/api/start/local', {})).status, 400);
+  assert.equal((await request('/api/files', files())).status, 404);
+  assert.equal((await request('/api/complete', {})).status, 404);
+  const firstLink = (await request('/api/start/mobile', {})).data;
+  assert.equal(firstLink.id, initial.id);
+  const firstMobile = '/api/mobile/' + firstLink.url.split('/').pop();
+  assert.equal((await request(firstMobile + '/complete', {}, false)).status, 409);
+  assert.equal((await request(firstMobile + '/files', files(5 * 1024 * 1024), false)).status, 200);
+  assert.equal((await request(firstMobile + '/files', files(5 * 1024 * 1024 + 1), false)).status, 400);
   // Browser MIME is untrusted: genuine PDF content is recognized independently.
   const spoof = new FormData(); spoof.append('files', new Blob(['<script>not an image</script>'], {type:'image/png'}), 'fake.png');
-  assert.equal((await request('/api/files', spoof)).status, 400);
+  assert.equal((await request(firstMobile + '/files', spoof, false)).status, 400);
   const uploaded = (await request('/api/session')).data.files[0];
-  assert.equal((await request('/api/complete', {})).status, 409);
+  assert.equal((await request(firstMobile + '/complete', {}, false)).status, 409);
   const preview = await fetch(base + `/api/files/${uploaded.id}/content`, { headers: { Cookie: cookie } });
   assert.equal(preview.status, 200);
   assert.equal(preview.headers.get('content-type'), 'application/pdf');
   assert.equal((await preview.arrayBuffer()).byteLength, 5 * 1024 * 1024);
   assert.equal((await fetch(base + `/api/files/${uploaded.id}/content`)).status, 401);
   await request(`/api/files/${uploaded.id}/review`, {});
-  let result = await request('/api/complete', {});
+  assert.equal((await request(firstMobile + '/complete', {}, false)).status, 200);
+  let result = await request('/api/session');
   assert.equal(result.data.status, 'complete');
   assert.equal(result.data.id, initial.id);
   assert.equal((await request('/api/start/mobile', {})).status, 409);
